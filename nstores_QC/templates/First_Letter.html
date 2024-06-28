@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Quality Check</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>QC ONDC</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="#">Title Case Check</a></li>
+        </ul>
+    </nav>
+    {% for record, fields in wrong_words.items %}
+        <div>
+            <h2>Record {{ record }}</h2>
+            <ul>
+                {% for field, words in fields.items %}
+                    <li>
+                        <strong>{{ field }}</strong>:
+                        {% for word in words %}
+                            {{ word }}
+                            <input type="checkbox" value="Done">
+                        {% endfor %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+    <form action="{% url 'length' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Next Step(Length check)</button>
+    </form>
+</body>
+</html>
