@@ -4,10 +4,12 @@ import pandas as pd
 import numpy as np
 from django.db import connection
 from . import spell, First_Letter, length20, image, fssai_detection
-
+from .celery_task import process_images_task, fssai_detection_task
+from celery.result import AsyncResult
 
 stored_json_data = None
 long_json = None
+process_task_id = None
 
 def home(request):
     return render(request, 'main.html', {'value': 'home'})
@@ -15,6 +17,7 @@ def home(request):
 def upload(request, type):
     global stored_json_data
     global long_json
+    global process_task_id
 
     if request.method == 'POST':
         if 'excel_file' not in request.FILES:
@@ -36,6 +39,7 @@ def upload(request, type):
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
                 if long_json is not None:
+                    process_task_id = process_images_task.delay(stored_json_data).id
                     return render(request, 'main.html', {'value': 'upload success'})
                 else:
                     return render(request, 'main.html', {'value': 'upload'})
@@ -47,6 +51,7 @@ def upload(request, type):
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
                 if stored_json_data is not None:
+                    process_task_id = process_images_task.delay(stored_json_data).id
                     return render(request, 'main.html', {'value': 'upload success'})
                 else:
                     return render(request, 'main.html', {'value': 'upload'})
@@ -55,7 +60,6 @@ def upload(request, type):
             return HttpResponse(str(e))
 
     return render(request, 'main.html', {'value': 'upload'})
-
 
 def spellcheck(request, word):
     global stored_json_data
@@ -80,7 +84,6 @@ def spellcheck(request, word):
     misspelled = spell.spellc(stored_json_data)
     return render(request, 'main.html', {'wrong_words': misspelled, 'value': 'spellcheck'})
 
-
 def spellL(request, word):
     global long_json
 
@@ -101,7 +104,6 @@ def spellL(request, word):
     misspelled_long = spell.spelllong(long_json)
     return render(request, 'longspell.html', {'wrong_words': misspelled_long, 'value': 'longsp'})
 
-
 def firstLetter(request):
     global stored_json_data
 
@@ -111,7 +113,6 @@ def firstLetter(request):
         return render(request, 'First_Letter.html', {'wrong_words': not_title})
     else:
         return HttpResponse("<h2>SOME ERROR HAS OCCURRED PLEASE TRY AGAIN</h2>")
-
 
 def length(request):
     global stored_json_data
@@ -123,28 +124,35 @@ def length(request):
     else:
         return HttpResponse("<h2>SOME ERROR HAS OCCURRED PLEASE TRY AGAIN</h2>")
 
-
 def image_quality(request):
     global stored_json_data
     global good_images
+    global process_task_id
 
     if request.method == "POST":
-        # Mock function call to image_quality module (replace with actual logic)
-        tup = image.hd(stored_json_data)
-        non_hd=tup[0]
-        good_images=tup[1]
+        if not process_task_id:
+            return HttpResponse("<h1>No task found</h1>")
         
+        result = AsyncResult(process_task_id)
+        if not result.ready():
+            return HttpResponse("<h1>Task is still processing</h1>")
+
+        tup = result.result
+        non_hd = tup[0]
+        good_images = tup[1]
+
         print(non_hd)
         return render(request, 'image.html', {'wrong_words': non_hd})
-    
+
 def fssai(request):
-    non_fssai={}
-    if request.method=="POST":
-        for record,fields in good_images.items():
-            for field,url in fields.items():
+    global good_images
+    non_fssai = {}
+    if request.method == "POST":
+        for record, fields in good_images.items():
+            for field, url in fields.items():
                 for i in url:
-                    clas=fssai_detection.process_image(i)
-                    if clas=='class2':
+                    clas = fssai_detection.process_image(i)
+                    if clas == 'class2':
                         if record not in non_fssai:
                             non_fssai[record] = {}
                         if 'image_url' not in non_fssai[record]:
