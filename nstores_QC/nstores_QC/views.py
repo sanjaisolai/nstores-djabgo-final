@@ -140,9 +140,9 @@ def image_quality(request):
         tup = result.result
         non_hd = tup[0]
         good_images = tup[1]
-
-        print(non_hd)
-        return render(request, 'image.html', {'wrong_words': non_hd})
+        broken_links=tup[2]
+        print(broken_links)
+        return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links})
 
 def fssai(request):
     global good_images

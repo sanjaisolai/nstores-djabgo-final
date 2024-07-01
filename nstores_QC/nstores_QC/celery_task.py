@@ -8,7 +8,8 @@ def process_images_task(stored_json_data):
     tup = image.hd(stored_json_data)
     non_hd = tup[0]
     good_images = tup[1]
-    return (non_hd, good_images)
+    broken_links=tup[2]
+    return (non_hd, good_images,broken_links)
 
 @shared_task
 def fssai_detection_task(good_images):

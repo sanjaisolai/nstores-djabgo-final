@@ -1,8 +1,11 @@
 import requests
 from PIL import Image
 from io import BytesIO
-
-def is_hd(image_url):
+broken_links=[]
+def is_hd(image_url,j):
+    global broken_links
+    global broken
+    broken=0
     try:
         # Download the image from URL
         response = requests.get(image_url)
@@ -20,14 +23,19 @@ def is_hd(image_url):
 
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
+        broken_links.append(j)
+        broken=1
         return False
     except requests.exceptions.RequestException as req_err:
         print(f"Request error occurred: {req_err}")
+        broken=1
+        broken_links.append(j)
         return False
     except Exception as err:
         print(f"Error occurred: {err}")
+        broken=1
+        broken_links.append(j)
         return False
-
 def hd(data):
     good_images={}
     image_url = []
@@ -36,17 +44,21 @@ def hd(data):
         image_url.append(data[str(i)]['Image_Url'])
     j=1
     for i in image_url:
-        if not is_hd(i):
-            if j not in not_hd:
-                not_hd[j] = {}
-            if 'image_url' not in not_hd[j]:
-                not_hd[j]['image_url'] = []
-            not_hd[j]['image_url'].append(i)
-        else:
-            if j not in good_images:
-                good_images[j] = {}
-            if 'image_url' not in good_images[j]:
-                good_images[j]['image_url'] = []
-            good_images[j]['image_url'].append(i)
+        i=i.split(',')
+        for x in i:
+            if not is_hd(x,j):
+                if broken==1:
+                    continue
+                if j not in not_hd:
+                    not_hd[j] = {}
+                if 'image_url' not in not_hd[j]:
+                    not_hd[j]['image_url'] = []
+                not_hd[j]['image_url'].append(x)
+            else:
+                if j not in good_images:
+                    good_images[j] = {}
+                if 'image_url' not in good_images[j]:
+                    good_images[j]['image_url'] = []
+                good_images[j]['image_url'].append(x)
         j+=1
-    return (not_hd,good_images)
+    return (not_hd,good_images,broken_links)
