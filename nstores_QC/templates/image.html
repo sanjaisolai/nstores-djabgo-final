@@ -15,6 +15,14 @@
             <li><a href="#">Image Quality check</a></li>
         </ul>
     </nav>
+    <h1>Links that appeared to be broken</h1>
+    <ul>
+    {% for i in wrong_urls %}
+        <li><strong>Record: {{ i }}</strong></li>
+    {% endfor %}
+    </ul>
+    <br>
+    <h1>Image quality check</h1>
     {% for record, fields in wrong_words.items %}
         <div>
             <h2>Record {{ record }}</h2>
