@@ -15,7 +15,14 @@
             <li><a href="#">fssai check</a></li>
         </ul>
     </nav>
-    {% for record, fields in wrong_words.items %}
+    {% for i in wrong_words %}
+        <ul>
+            <li>
+                <strong>Record: {{ i }}</strong>
+            </li>
+        </ul>
+    {% endfor %}
+    <!-- {% for record, fields in wrong_words.items %}
         <div>
             <h2>Record {{ record }}</h2>
             <ul>
@@ -30,6 +37,6 @@
                 {% endfor %}
             </ul>
         </div>
-    {% endfor %}
+    {% endfor %} -->
 </body>
 </html>

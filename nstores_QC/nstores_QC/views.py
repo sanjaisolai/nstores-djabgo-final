@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from django.db import connection
 from . import spell, First_Letter, length20, image, fssai_detection
-from .celery_task import process_images_task, fssai_detection_task
+from .celery_task import process_images_task
 from celery.result import AsyncResult
 
 stored_json_data = None
@@ -18,7 +18,7 @@ def upload(request, type):
     global stored_json_data
     global long_json
     global process_task_id
-
+    global is_packaged
     if request.method == 'POST':
         if 'excel_file' not in request.FILES:
             return render(request, 'main.html')
@@ -33,13 +33,14 @@ def upload(request, type):
             json_data = {str(key + 1): value for key, value in json_data.items()}
 
             if type == "raw":
+                is_packaged=int(request.POST.get('packaged'))
                 stored_json_data = json_data
                 keys = stored_json_data['1'].keys()
                 if 'Product_Name' not in keys:
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
                 if long_json is not None:
-                    process_task_id = process_images_task.delay(stored_json_data).id
+                    process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
                     return render(request, 'main.html', {'value': 'upload success'})
                 else:
                     return render(request, 'main.html', {'value': 'upload'})
@@ -51,7 +52,7 @@ def upload(request, type):
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
                 if stored_json_data is not None:
-                    process_task_id = process_images_task.delay(stored_json_data).id
+                    process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
                     return render(request, 'main.html', {'value': 'upload success'})
                 else:
                     return render(request, 'main.html', {'value': 'upload'})
@@ -126,7 +127,7 @@ def length(request):
 
 def image_quality(request):
     global stored_json_data
-    global good_images
+    global not_fssai
     global process_task_id
 
     if request.method == "POST":
@@ -139,26 +140,11 @@ def image_quality(request):
 
         tup = result.result
         non_hd = tup[0]
-        good_images = tup[1]
+        not_fssai = tup[1]
         broken_links=tup[2]
         print(broken_links)
-        return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links})
+        return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
 
 def fssai(request):
-    global good_images
-    non_fssai = {}
     if request.method == "POST":
-        for record, fields in good_images.items():
-            for field, url in fields.items():
-                for i in url:
-                    clas = fssai_detection.process_image(i)
-                    if clas == 'class2':
-                        if record not in non_fssai:
-                            non_fssai[record] = {}
-                        if 'image_url' not in non_fssai[record]:
-                            non_fssai[record]['image_url'] = []
-                        non_fssai[record]['image_url'].append(i)
-
-        print(non_fssai)
-
-        return render(request, 'fssai.html', {'wrong_words': non_fssai})
+        return render(request, 'fssai.html', {'wrong_words': not_fssai})

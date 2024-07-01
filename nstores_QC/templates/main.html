@@ -29,6 +29,10 @@
             <h1>Masterfile:</h1>
             <form action="{% url 'upload' type='raw' %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
+                <select id="packaged" name="packaged">
+                    <option value="1">Packaged food item</option>
+                    <option value="0">Not a Packaged Food item</option>
+                </select>
                 <input type="file" name="excel_file" accept=".xlsx, .xls">
                 <input type="submit" value="Upload">
             </form>
