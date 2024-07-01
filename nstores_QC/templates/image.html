@@ -39,9 +39,11 @@
             </ul>
         </div>
     {% endfor %}
+    {% if is_packaged == 1 %}
     <form action="{% url 'fssai' %}" method="post">
         {% csrf_token %}
         <button type="submit">Next Step(fssai)</button>
     </form>
+    {% endif %}
 </body>
 </html>
