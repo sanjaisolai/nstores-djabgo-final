@@ -62,17 +62,17 @@ def process_images_task(self, stored_json_data, is_packaged):
         return (not_hd,not_fssai,image.broken_links)
     
     except HTTPError as e:
-        # Handle specific HTTP errors like 403
+ 
         if e.response.status_code == 403:
             logging.error(f"403 Forbidden error: {e}")
-            # Handle the 403 error specifically without retrying
+
             return "403 Forbidden error occurred"
         else:
-            # Re-raise other HTTP errors to trigger retry
+
             raise
     except Exception as e:
-        # Log the error
+ 
         logging.error(f"Error processing images: {e}")
-        # Explicitly raise the exception to trigger the retry
+        
         raise self.retry(exc=e)
 

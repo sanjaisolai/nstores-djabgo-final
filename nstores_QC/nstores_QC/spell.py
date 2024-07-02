@@ -7,13 +7,13 @@ def clean_word(word):
     return re.sub(r'[()\-]', '', word).lower()
 
 def clean_long(word):
-    # Define a pattern to match any preceding or trailing special characters except alphabets, digits, and underscore
+   
     pattern = r'^[^\w\d_]+|[^\w\d_]+$'
     
-    # Remove '_x000D_' and surrounding special characters
+   
     cleaned_word = re.sub(r'_x000D_', '', word)
     
-    # Remove preceding and trailing special characters defined by the pattern
+    
     cleaned_word = re.sub(pattern, '', cleaned_word)
     
     return cleaned_word.lower()

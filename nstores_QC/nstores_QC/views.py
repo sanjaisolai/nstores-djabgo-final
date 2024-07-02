@@ -3,7 +3,7 @@ from django.http import HttpResponse,JsonResponse
 import pandas as pd
 import numpy as np
 from django.db import connection
-from . import spell, First_Letter, length20, image, fssai_detection
+from . import spell, First_Letter, length20
 from .celery_task import process_images_task
 from celery.result import AsyncResult
 import time
@@ -74,7 +74,6 @@ def spellcheck(request, word):
         with connection.cursor() as cursor:
             cursor.execute(query)
 
-    # Mock function call to spellcheck module (replace with actual logic)
     misspelled = spell.spellc(stored_json_data)
     return render(request, 'main.html', {'wrong_words': misspelled, 'value': 'spellcheck'})
 
@@ -94,7 +93,6 @@ def spellL(request, word):
         with connection.cursor() as cursor:
             cursor.execute(query)
 
-    # Mock function call to spellcheck module (replace with actual logic)
     misspelled_long = spell.spelllong(long_json)
     return render(request, 'longspell.html', {'wrong_words': misspelled_long, 'value': 'longsp'})
 
@@ -102,7 +100,7 @@ def firstLetter(request):
     global stored_json_data
 
     if request.method == "POST":
-        # Mock function call to firstLetter module (replace with actual logic)
+
         not_title = First_Letter.first(stored_json_data)
         return render(request, 'First_Letter.html', {'wrong_words': not_title})
     else:
@@ -112,7 +110,7 @@ def length(request):
     global stored_json_data
 
     if request.method == "POST":
-        # Mock function call to length module (replace with actual logic)
+        
         not_length = length20.length_not_20(stored_json_data)
         return render(request, 'length.html', {'wrong_words': not_length})
     else:
