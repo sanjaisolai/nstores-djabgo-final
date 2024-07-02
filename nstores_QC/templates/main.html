@@ -37,10 +37,12 @@
             </div>
         </div>
     </nav>
+    {% if value == 'spellcheck' %}
     <form action="{% url 'spellL' word='check' %}" method="post" class="top-right-button">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">Next Step (Long Description Spell Check)</button>
     </form>
+    {% endif %}
     <div class="container mt-4">
         {% if value == "home" %}
             <h1 class="text-center">Please upload a file to start processing</h1>
