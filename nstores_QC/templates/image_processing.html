@@ -4,6 +4,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+        var interval;
          function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -22,7 +23,7 @@
         function display(){
             const csrftoken = getCookie('csrftoken');
             $.ajax({
-                url: '{% url "image_quality" %}',
+                url: '{% url "progress" %}',
                 method: 'post',
                 headers: {
                     'X-CSRFToken': csrftoken  
@@ -30,12 +31,9 @@
                 success: function(response) {
                     if (response.hasOwnProperty('progress')) {
                         $('h1').text(`Task is still processing ${response.progress}%`);
-                        if (response.progress > 95) {
-                            // Refresh every 3 seconds
-                            setTimeout(function() {
-                                location.reload();
-                            }, 3000);
-                            
+                        if(response.progress==100){
+                            clearInterval(interval)
+                            window.location.href='../display_image'
                         }
                     }
                     
@@ -48,8 +46,8 @@
         }
         
         $(document).ready(function() {
-            display();
-            setInterval(display, 3000);  
+            interval = setInterval(display, 3000);
+            display(); 
         });
     </script>
 </head>

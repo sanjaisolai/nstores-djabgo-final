@@ -26,5 +26,7 @@ urlpatterns = [
     path('First_Letter', views.firstLetter, name='firstLetter'),
     path('length', views.length, name='length'),
     path('image_quality', views.image_quality, name='image_quality'),
-    path('fssai_check',views.fssai,name='fssai')
+    path('fssai_check',views.fssai,name='fssai'),
+    path('progress',views.progress,name='progress'),
+    path('display_image',views.display_image,name='display_image')
 ]

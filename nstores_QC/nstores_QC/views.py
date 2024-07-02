@@ -119,29 +119,36 @@ def length(request):
         return HttpResponse("<h2>SOME ERROR HAS OCCURRED PLEASE TRY AGAIN</h2>")
 
 def image_quality(request):
-    global stored_json_data
-    global not_fssai
-    global process_task_id
+    
     global image_flag
     if request.method == "POST":
         if not process_task_id:
             return HttpResponse("<h1>No task found</h1>")
         
+        
+        return render(request, 'image_processing.html')
+        
+def progress(request):
+    global stored_json_data
+    global not_fssai
+    global process_task_id
+    if request.method=='POST':
         result = AsyncResult(process_task_id)
         if not result.ready():
-            if image_flag==0:
-                image_flag=1
-                return render(request, 'image_processing.html')
-            else:
-                progress = round(result.info.get('progress', 0))
-                return JsonResponse({'progress': progress})
+            progress = round(result.info.get('progress', 0))
+            return JsonResponse({'progress': progress})
         else:
-            tup = result.result
-            non_hd = tup[0]
-            not_fssai = tup[1]
-            broken_links=tup[2]
-            print(broken_links)
-            return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
+            return JsonResponse({'progress': 100})
+            
+def display_image(request):
+    global not_fssai
+    result = AsyncResult(process_task_id)
+    tup = result.result
+    non_hd = tup[0]
+    not_fssai = tup[1]
+    broken_links=tup[2]
+    print(broken_links)
+    return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
 
 def fssai(request):
     if request.method == "POST":
