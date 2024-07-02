@@ -12,7 +12,7 @@ long_json = None
 process_task_id = None
 
 def home(request):
-    return render(request, 'main.html', {'value': 'home'})
+    return render(request, 'main.html', {'value': 'home','to_do':'upl'})
 
 def upload(request, type):
     global stored_json_data
@@ -39,11 +39,8 @@ def upload(request, type):
                 if 'Product_Name' not in keys:
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
-                if long_json is not None:
-                    process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
-                    return render(request, 'main.html', {'value': 'upload success'})
-                else:
-                    return render(request, 'main.html', {'value': 'upload'})
+                process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
+                return render(request, 'main.html', {'value': 'upload','file':'long'})
 
             elif type == "long":
                 long_json = json_data
@@ -51,16 +48,12 @@ def upload(request, type):
                 if 'Description' not in keys_long:
                     return HttpResponse("<h1>Wrong Template Go back</h1>")
 
-                if stored_json_data is not None:
-                    process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
-                    return render(request, 'main.html', {'value': 'upload success'})
-                else:
-                    return render(request, 'main.html', {'value': 'upload'})
+                return render(request, 'main.html', {'value': 'upload success'})
 
         except Exception as e:
             return HttpResponse(str(e))
 
-    return render(request, 'main.html', {'value': 'upload'})
+    return render(request, 'main.html', {'value': 'upload','file':'master'})
 
 def spellcheck(request, word):
     global stored_json_data

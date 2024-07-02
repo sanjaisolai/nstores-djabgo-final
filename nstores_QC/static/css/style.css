@@ -1,0 +1,13 @@
+.word-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.word-item form {
+    margin-right: 10px;
+}
+.top-right-button {
+    position: absolute;
+    top: 10px; /* Adjust as needed */
+    right: 10px; /* Adjust as needed */
+}
