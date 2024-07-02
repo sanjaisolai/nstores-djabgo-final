@@ -2,26 +2,77 @@
 
 from celery import shared_task
 from . import image, fssai_detection
+from requests.exceptions import ConnectionError, Timeout, HTTPError
+import logging
 
-@shared_task
-def process_images_task(stored_json_data,is_packaged):
-    tup = image.hd(stored_json_data,is_packaged)
-    non_hd = tup[0]
-    not_fssai = tup[1]
-    broken_links=tup[2]
-    return (non_hd, not_fssai,broken_links)
+@shared_task(bind=True, autoretry_for=(ConnectionError, Timeout), retry_kwargs={'max_retries': 5, 'countdown': 60})
+def process_images_task(self, stored_json_data, is_packaged):
+    try:
+        not_fssai=[]
+        image_url = []
+        not_hd={}
+        for i in range(1,len(stored_json_data)+1):
+            image_url.append(stored_json_data[str(i)]['Image_Url'])
+        
+        total_images=len(image_url)
+        processed=0
+        j=1
+        if is_packaged==1:
+            for i in image_url:
+                fssai_flag=0
+                i=i.split(',')
+                for x in i:
+                    if not image.is_hd(x,j):
+                        if image.broken==1:
+                            continue
+                        if j not in not_hd:
+                            not_hd[j] = {}
+                        if 'image_url' not in not_hd[j]:
+                            not_hd[j]['image_url'] = []
+                        not_hd[j]['image_url'].append(x)
+                    else:
+                        if fssai_flag==1:
+                            continue
+                        clas = fssai_detection.process_image(x)
+                        if clas=='class1':
+                            fssai_flag=1
+                            continue
+                        elif fssai_flag!=1 and i.index(x)==len(i)-1:
+                            not_fssai.append(j)
+                processed+=1
+                progress=(processed/total_images)*100
+                self.update_state(state='PROGRESS', meta={'progress': progress})
+                j+=1
+        else:
+            for i in image_url:
+                i=i.split(',')
+                for x in i:
+                    if not image.is_hd(x,j):
+                        if image.broken==1:
+                            continue
+                        if j not in not_hd:
+                            not_hd[j] = {}
+                        if 'image_url' not in not_hd[j]:
+                            not_hd[j]['image_url'] = []
+                        not_hd[j]['image_url'].append(x)
+                processed+=1
+                progress=(processed/total_images)*100
+                self.update_state(state='PROGRESS', meta={'progress': progress})
+                j+=1
+        return (not_hd,not_fssai,image.broken_links)
+    
+    except HTTPError as e:
+        # Handle specific HTTP errors like 403
+        if e.response.status_code == 403:
+            logging.error(f"403 Forbidden error: {e}")
+            # Handle the 403 error specifically without retrying
+            return "403 Forbidden error occurred"
+        else:
+            # Re-raise other HTTP errors to trigger retry
+            raise
+    except Exception as e:
+        # Log the error
+        logging.error(f"Error processing images: {e}")
+        # Explicitly raise the exception to trigger the retry
+        raise self.retry(exc=e)
 
-# @shared_task
-# def fssai_detection_task(good_images):
-#     non_fssai = {}
-#     for record, fields in good_images.items():
-#         for field, url in fields.items():
-#             for i in url:
-#                 clas = fssai_detection.process_image(i)
-#                 if clas == 'class2':
-#                     if record not in non_fssai:
-#                         non_fssai[record] = {}
-#                     if 'image_url' not in non_fssai[record]:
-#                         non_fssai[record]['image_url'] = []
-#                     non_fssai[record]['image_url'].append(i)
-#     return non_fssai
