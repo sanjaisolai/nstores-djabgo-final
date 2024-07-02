@@ -1,16 +1,16 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 import pandas as pd
 import numpy as np
 from django.db import connection
 from . import spell, First_Letter, length20, image, fssai_detection
 from .celery_task import process_images_task
 from celery.result import AsyncResult
-
+import time
 stored_json_data = None
 long_json = None
 process_task_id = None
-
+image_flag=0
 def home(request):
     return render(request, 'main.html', {'value': 'home','to_do':'upl'})
 
@@ -122,21 +122,26 @@ def image_quality(request):
     global stored_json_data
     global not_fssai
     global process_task_id
-
+    global image_flag
     if request.method == "POST":
         if not process_task_id:
             return HttpResponse("<h1>No task found</h1>")
         
         result = AsyncResult(process_task_id)
         if not result.ready():
-            return HttpResponse("<h1>Task is still processing</h1>")
-
-        tup = result.result
-        non_hd = tup[0]
-        not_fssai = tup[1]
-        broken_links=tup[2]
-        print(broken_links)
-        return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
+            if image_flag==0:
+                image_flag=1
+                return render(request, 'image_processing.html')
+            else:
+                progress = round(result.info.get('progress', 0))
+                return JsonResponse({'progress': progress})
+        else:
+            tup = result.result
+            non_hd = tup[0]
+            not_fssai = tup[1]
+            broken_links=tup[2]
+            print(broken_links)
+            return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
 
 def fssai(request):
     if request.method == "POST":
