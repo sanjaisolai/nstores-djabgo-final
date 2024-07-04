@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse,JsonResponse
 import pandas as pd
 import numpy as np
@@ -14,7 +15,10 @@ image_flag=0
 def home(request):
     return render(request, 'main.html', {'value': 'home','to_do':'upl'})
 
-def upload(request, type):
+
+    
+@csrf_exempt
+def upload(request, type, packaged):
     global stored_json_data
     global long_json
     global process_task_id
@@ -24,6 +28,7 @@ def upload(request, type):
             return render(request, 'main.html')
 
         excel_file = request.FILES['excel_file']
+        print(excel_file)
 
         try:
             # Read Excel file into pandas DataFrame directly from memory
@@ -33,33 +38,37 @@ def upload(request, type):
             json_data = {str(key + 1): value for key, value in json_data.items()}
 
             if type == "raw":
-                is_packaged=int(request.POST.get('packaged'))
+                is_packaged=int(packaged)
                 stored_json_data = json_data
                 keys = stored_json_data['1'].keys()
                 if 'Product_Name' not in keys:
-                    return HttpResponse("<h1>Wrong Template Go back</h1>")
+                    return JsonResponse({'template':'Wrong Template pls Upload the correct one'})
 
                 process_task_id = process_images_task.delay(stored_json_data,is_packaged).id
-                return render(request, 'main.html', {'value': 'upload','file':'long'})
+                return JsonResponse({'template':'Upload Successful'})
 
             elif type == "long":
                 long_json = json_data
                 keys_long = long_json['1'].keys()
                 if 'Description' not in keys_long:
-                    return HttpResponse("<h1>Wrong Template Go back</h1>")
+                    return JsonResponse({'template':'Wrong Template pls Upload the correct one'})
 
-                return render(request, 'main.html', {'value': 'upload success'})
+                return JsonResponse({'template':'Upload Successful'})
 
         except Exception as e:
             return HttpResponse(str(e))
 
     return render(request, 'main.html', {'value': 'upload','file':'master'})
 
+def final_json(request):
+    final={}
+
+@csrf_exempt
 def spellcheck(request, word):
     global stored_json_data
 
     if stored_json_data is None:
-        return HttpResponse("<h1>NO excel file detected</h1><br><h2>PLS Go Back and upload the file to continue</h2>")
+        return JsonResponse("<h1>NO excel file detected</h1><br><h2>PLS Go Back and upload the file to continue</h2>")
 
     if request.method == 'POST':
         word = word.replace("'", "''")
@@ -73,10 +82,12 @@ def spellcheck(request, word):
         '''
         with connection.cursor() as cursor:
             cursor.execute(query)
-
+  
     misspelled = spell.spellc(stored_json_data)
-    return render(request, 'main.html', {'wrong_words': misspelled, 'value': 'spellcheck'})
+    print(misspelled)
+    return JsonResponse(misspelled)
 
+@csrf_exempt
 def spellL(request, word):
     global long_json
 
@@ -94,25 +105,27 @@ def spellL(request, word):
             cursor.execute(query)
 
     misspelled_long = spell.spelllong(long_json)
-    return render(request, 'longspell.html', {'wrong_words': misspelled_long, 'value': 'longsp'})
+    return JsonResponse(misspelled_long)
 
+@csrf_exempt
 def firstLetter(request):
     global stored_json_data
 
-    if request.method == "POST":
+    if request.method == "GET":
 
         not_title = First_Letter.first(stored_json_data)
-        return render(request, 'First_Letter.html', {'wrong_words': not_title})
+        return JsonResponse(not_title)
     else:
         return HttpResponse("<h2>SOME ERROR HAS OCCURRED PLEASE TRY AGAIN</h2>")
-
+    
+@csrf_exempt
 def length(request):
     global stored_json_data
 
-    if request.method == "POST":
+    if request.method == "GET":
         
         not_length = length20.length_not_20(stored_json_data)
-        return render(request, 'length.html', {'wrong_words': not_length})
+        return JsonResponse(not_length)
     else:
         return HttpResponse("<h2>SOME ERROR HAS OCCURRED PLEASE TRY AGAIN</h2>")
 

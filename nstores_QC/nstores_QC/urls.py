@@ -20,7 +20,7 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('upload/<type>', views.upload, name='upload'),
+    path('api/upload/<str:type>/<str:packaged>/', views.upload, name='upload'),
     path('spell_check/<word>', views.spellcheck, name='spellcheck'),
     path('spellLong/<word>', views.spellL, name='spellL'),
     path('First_Letter', views.firstLetter, name='firstLetter'),

@@ -10,11 +10,11 @@ def first(data):
     j=1
     for i in Product_Name:
         if not is_first_letter_uppercase_each_word(i):
-            if j not in not_title:
-                not_title[j] = {}
-            if 'Product_Name' not in not_title[j]:
-                not_title[j]['Product_Name'] = []
-            not_title[j]['Product_Name'].append(i)
+            if str(j) not in not_title:
+                not_title[str(j)] = {}
+            if 'Product_Name' not in not_title[str(j)]:
+                not_title[str(j)]['Product_Name'] = []
+            not_title[str(j)]['Product_Name'].append(i)
         j+=1
 
     return not_title

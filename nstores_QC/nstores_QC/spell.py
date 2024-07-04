@@ -38,11 +38,11 @@ def spellc(data):
                 if word_lower=='':
                     continue
                 if word_lower not in words_to_skip and not spell_en.check(word_lower):
-                    if i not in misspelled:
-                            misspelled[i] = {}
-                    if j not in misspelled[i]:
-                            misspelled[i][j] = []
-                    misspelled[i][j].append(word_lower)
+                    if str(i) not in misspelled:
+                            misspelled[str(i)] = {}
+                    if j not in misspelled[str(i)]:
+                            misspelled[str(i)][j] = []
+                    misspelled[str(i)][j].append(word_lower)
     return misspelled
 def spelllong(json_data):
     with connection.cursor() as cursor:
@@ -62,10 +62,10 @@ def spelllong(json_data):
                 if word_lower=='':
                     continue
                 if word_lower not in words_to_skip and not spell_en.check(word_lower):
-                    if i not in misspelled_long:
-                            misspelled_long[i] = {}
-                    if j not in misspelled_long[i]:
-                            misspelled_long[i][j] = []
-                    misspelled_long[i][j].append(word_lower)
+                    if str(i) not in misspelled_long:
+                            misspelled_long[str(i)] = {}
+                    if j not in misspelled_long[str(i)]:
+                            misspelled_long[str(i)][j] = []
+                    misspelled_long[str(i)][j].append(word_lower)
     return misspelled_long
 
