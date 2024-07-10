@@ -17,7 +17,7 @@ def is_hd(image_url,j):
 
         # Check image dimensions
         width, height = img.size
-        if width >= 720 and height >= 480:
+        if width >= 720 and height >= 380:
             return True
         else:
             return False

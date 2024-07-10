@@ -14,3 +14,7 @@ tup=cur.fetchall()
 print(tup)
 con.commit()
 con.close()
+
+
+data_dir = r'C:\Users\sanjai\Desktop\nstore qc automation web application django\nstores_QC\nstores_QC\dataset'  # Path to your dataset
+model_dir = r'C:\Users\sanjai\Desktop\nstore qc automation web application django\nstores_QC\nstores_QC\models'

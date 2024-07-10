@@ -7,12 +7,15 @@ import pandas as pd
 from openpyxl import load_workbook, Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
-from tensorflow.keras.applications import MobileNetV2 # type: ignore
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D # type: ignore
-from tensorflow.keras.models import Model # type: ignore
-from tensorflow.keras.optimizers import Adam # type: ignore
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 
+# Global variable to store the model
+loaded_model = None
+class_indices = {'class1': 0, 'class2': 1}
 # Function to create and compile the model
 def create_model(num_classes):
     base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
@@ -28,6 +31,17 @@ def create_model(num_classes):
     model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
+# Function to load the model
+def load_or_create_model(data_dir, model_path):
+    global loaded_model
+    if loaded_model is None:
+        if not os.path.exists(model_path):
+            print("Model not found, training the model...")
+            model = train_model(data_dir, model_path)
+        else:
+            loaded_model = tf.keras.models.load_model(model_path)
+    return loaded_model
+
 # Function to train the model
 def train_model(data_dir, model_path, batch_size=8, epochs=10):
     datagen = ImageDataGenerator(validation_split=0.2, rescale=1./255)
@@ -40,7 +54,12 @@ def train_model(data_dir, model_path, batch_size=8, epochs=10):
     # Ensure the directory exists before saving the model
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     model.save(model_path)
-    return model, train_generator.class_indices
+
+    # Set the loaded_model global variable
+    global loaded_model
+    loaded_model = model
+
+    return model
 
 # Function to fetch image from URL
 def fetch_image_from_url(url):
@@ -100,21 +119,19 @@ def predict_objects(model, class_indices, image):
 # Main function to process image, detect objects, and update Excel
 def process_image(url):
     try:
-        data_dir = r'C:\Users\sanjai\Desktop\nstore qc automation web application django\nstores_QC\nstores_QC\dataset'  # Path to your dataset
-        model_dir = r'C:\Users\sanjai\Desktop\nstore qc automation web application django\nstores_QC\nstores_QC\models'  # Directory to save the model
+        data_dir = './nstores_QC/dataset'  # Path to your dataset
+        model_dir = './nstores_QC/models'  # Directory to save the model
         model_path = os.path.join(model_dir, 'model.h5')
         sheet_path = './results.xlsx'  # Path to your Excel file
+        global loaded_model
+
         serial_number = 1
-        if not os.path.exists(model_path):
-            print("Model not found, training the model...")
-            model, class_indices = train_model(data_dir, model_path)
-        else:
-            # Load class indices from training phase
-            class_indices = {'class1': 0, 'class2': 1}
+        if loaded_model is None:
+            print("Model not found, loading or training the model...")
+            loaded_model = load_or_create_model(data_dir, model_path)
 
         image = fetch_image_from_url(url)
-        model = load_model(model_path)
-        class_name, confidence = predict_objects(model, class_indices, image)
+        class_name, confidence = predict_objects(loaded_model, class_indices, image)
 
         result = {
             'URL': url,
@@ -129,10 +146,5 @@ def process_image(url):
 
 # Example usage
 # if __name__ == "__main__":
-    
-    # url = 'https://ondc-marketplace.s3.ap-south-1.amazonaws.com/images/dba17b17-c602-4bcd-961c-32f82cd2e146.jpg'  # Replace with a valid URL
-
-    # Ensure the model is trained and saved before processing images
-      # Update with your actual class indices
-
-    # Process image and update Excel
+#     url = 'https://ondc-marketplace.s3.ap-south-1.amazonaws.com/images/dba17b17-c602-4bcd-961c-32f82cd2e146.jpg'  # Replace with a valid URL
+#     process_image(url)
