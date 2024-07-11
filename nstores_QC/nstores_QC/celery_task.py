@@ -14,7 +14,7 @@ def process_images_task(self, stored_json_data, is_packaged):
         
         for i in range(1, len(stored_json_data) + 1):
             image_url.append(stored_json_data[str(i)]['Image_Url'])
-        print(image_url)
+
         
         total_images = len(image_url)
         processed = 0
@@ -25,8 +25,6 @@ def process_images_task(self, stored_json_data, is_packaged):
                 fssai_flag = 0
                 i = images.split(',')
                 copy_list = i.copy()  # Make a copy of the list
-                print(copy_list)
-                print(f"Processing record {j} with images: {copy_list}")
                 for x in copy_list:
                     if not image.is_hd(x, j):
                         i.remove(x)
@@ -46,7 +44,7 @@ def process_images_task(self, stored_json_data, is_packaged):
                         if fssai_flag == 1:
                             continue
                         clas = fssai_detection.process_image(x)
-                        print(f"Processed image {x}, Result: {clas}")
+
                         if clas == 'class1':
                             fssai_flag = 1
                             continue

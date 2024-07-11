@@ -38,7 +38,6 @@ def upload(request, type, packaged):
             return render(request, 'main.html')
 
         excel_file = request.FILES['excel_file']
-        print(excel_file)
 
         try:
             # Read Excel file into pandas DataFrame directly from memory
@@ -74,10 +73,7 @@ def upload(request, type, packaged):
         except Exception as e:
             return HttpResponse(str(e))
 
-    return render(request, 'main.html', {'value': 'upload','file':'master'})
 
-def final_json(request):
-    final={}
 
 @csrf_exempt
 def spellcheck(request, word):
@@ -163,7 +159,7 @@ def progress(request):
         else:
             return JsonResponse({'progress': 100})
 @csrf_exempt            
-def display_image(request):
+def display_image(request): #154s time taken for 50 images
     if request.method=='GET':
         global not_fssai
         result = AsyncResult(process_task_id)
@@ -176,7 +172,7 @@ def display_image(request):
         # return render(request, 'image.html', {'wrong_words': non_hd,'wrong_urls':broken_links,'is_packaged':is_packaged})
 
 @csrf_exempt
-def fssai(request):
+def fssai(request):    #354.73399999993853s time taken for 50 images
     if request.method=='GET':
         print(not_fssai)
         return JsonResponse(not_fssai)
@@ -184,7 +180,7 @@ def fssai(request):
 def add_image(request,url):
     if request.method == 'POST':
         try:
-            data_dir='./nstores_QC/dataset/class1'
+            data_dir='./nstores_QC/sample'
             decoded_url=unquote(url)
             response = requests.get(decoded_url)
             if response.status_code == 200:
